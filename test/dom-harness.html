@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>plugin-search DOM harness</title>
+<style>
+  /* 主题 token 的最小替身：让样式表里的 var() 有东西可取。 */
+  :root {
+    --dsw-alias-border-l4: #ddd;
+    --dsw-alias-border-l1: #eee;
+    --dsw-radius-md: 8px;
+    --dsw-alias-bg-layer-1: #fff;
+    --dsw-alias-label-primary: #111;
+    --dsw-alias-label-secondary: #444;
+    --dsw-alias-label-tertiary: #888;
+    --dsw-alias-label-caption: #999;
+    --dsw-alias-label-dimmed: #bbb;
+    --dsw-alias-state-business-primary: #2b6;
+    --dsw-alias-brand-primary: #2b6;
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+  /* ── 迷你 __ModuleLoader__ ─────────────────────────────────────────────── */
+  const registered = {};
+  window.__ModuleLoader__ = { load(row) { registered[row.id] = row } };
+</script>
+<script src="../lib/client.js"></script>
+<script>
+  /* ══════════════════════════════════════════════════════════════════════════
+     夹具：按 ui-plugin-manager 真实渲染出的结构搭出「插件」页。
+     属性名与层级都取自它的 JSX —— 这是被测代码赖以定位的契约。
+     ══════════════════════════════════════════════════════════════════════════ */
+  const CARDS = {
+    official: [
+      { name: '@deepseek-ai/dsh-experimental-agent-team-profile', status: 'off', title: '智能体团队', beta: true,
+        desc: '启用团队协作、团队工具、成员列表和共享任务看板。' },
+      { name: '@deepseek-ai/dsh-experimental-auto-review', status: 'off', title: '自动授权审查', beta: true,
+        desc: '提供自动审查权限模式，由模型在每次工具调用前判断是否授权。' },
+      { name: '@deepseek-ai/dsh-experimental-schedule-bundle', status: 'off', title: '自动化任务', beta: true,
+        desc: '按设定的时间或周期，在会话中自动执行任务。' },
+      { name: '@deepseek-ai/dsh-experimental-voice-input-bundle', status: 'off', title: '语音输入', beta: true,
+        desc: '在本机使用 SenseVoice 转写录音，首次使用需安装依赖。' },
+    ],
+    bundles: [
+      { name: '@michengai/dsh-agency-agents', status: 'on', title: '@michengai/dsh-agency-agents',
+        desc: 'DSH Agency Agents — 为 DeepSeek Harness 提供 321 名可召唤的专业智能体' },
+      { name: '@nanmicoder/dsh-agent-teams', status: 'on', title: '@nanmicoder/dsh-agent-teams',
+        desc: 'AgentTeams for DeepSeek Harness: multi-agent team collaboration' },
+      { name: 'dsh-better-sidebar', status: 'on', title: 'Better Sidebar',
+        desc: '更好用的右侧边栏——文件树、编辑器、文件变动、任务和侧边对话都收在这一栏里。' },
+      { name: 'dsh-taskboard', status: 'on', title: 'dsh-taskboard',
+        desc: 'DSH 任务看板：人在 Web GUI 看板上实时看到同样数据。' },
+      { name: 'dsh-thoughtdag', status: 'on', title: 'dsh-thoughtdag',
+        desc: 'why layer: evidence from session logs about past agent conversations.' },
+    ],
+  };
+
+  function cardLi(c) {
+    const li = document.createElement('li');
+    li.className = 'card cardLink';
+    li.setAttribute('data-plugin-package', c.name);
+    li.setAttribute('data-plugin-status', c.status);
+    const head = document.createElement('div');
+    head.className = 'cardHead';
+    const icon = document.createElement('span');
+    icon.className = 'cardIcon';
+    icon.setAttribute('aria-hidden', 'true');
+    const main = document.createElement('div');
+    main.className = 'cardMain';
+    const titleRow = document.createElement('div');
+    titleRow.className = 'titleRow';
+    const title = document.createElement('button');
+    title.type = 'button';
+    title.className = 'cardTitle cardOpen';
+    title.setAttribute('aria-label', 'open ' + c.title);
+    title.textContent = c.title;
+    titleRow.appendChild(title);
+    if (c.beta) {
+      const tag = document.createElement('span');
+      tag.className = 'statusTag';
+      tag.textContent = '实验性';
+      titleRow.appendChild(tag);
+    }
+    const desc = document.createElement('span');
+    desc.className = 'cardDesc';
+    desc.textContent = c.desc;
+    main.appendChild(titleRow);
+    main.appendChild(desc);
+    head.appendChild(icon);
+    head.appendChild(main);
+    li.appendChild(head);
+    return li;
+  }
+
+  function renderPage() {
+    const panel = document.createElement('section');
+    panel.className = 'page';
+    panel.setAttribute('data-plugin-panel', '');
+
+    const header = document.createElement('header');
+    header.className = 'pageHead';
+    header.setAttribute('data-window-drag', '');
+    const lead = document.createElement('div');
+    const h1 = document.createElement('h1');
+    h1.className = 'pageTitle';
+    h1.textContent = '插件';
+    const intro = document.createElement('div');
+    intro.className = 'pageIntro';
+    const introSpan = document.createElement('span');
+    introSpan.textContent = '安装、启用和配置插件';
+    intro.appendChild(introSpan);
+    lead.appendChild(h1);
+    lead.appendChild(intro);
+    const toolbar = document.createElement('div');
+    toolbar.className = 'toolbar';
+    const refresh = document.createElement('button');
+    refresh.type = 'button';
+    refresh.className = 'iconButton';
+    refresh.setAttribute('aria-label', '刷新');
+    toolbar.appendChild(refresh);
+    const add = document.createElement('button');
+    add.type = 'button';
+    add.className = 'addButton';
+    add.textContent = '添加插件';
+    toolbar.appendChild(add);
+    header.appendChild(lead);
+    header.appendChild(toolbar);
+    panel.appendChild(header);
+
+    ['official', 'bundles'].forEach((id) => {
+      const group = document.createElement('section');
+      group.className = 'group';
+      group.setAttribute('data-plugin-scope', 'global');
+      group.setAttribute('data-plugin-group', id);
+      const head = document.createElement('div');
+      head.className = 'groupHead';
+      const h3 = document.createElement('h3');
+      h3.className = 'groupTitle';
+      h3.textContent = id === 'official' ? '官方' : '已安装';
+      const count = document.createElement('span');
+      count.className = 'count';
+      count.setAttribute('data-plugin-count', String(CARDS[id].length));
+      count.textContent = String(CARDS[id].length);
+      head.appendChild(h3);
+      head.appendChild(count);
+      group.appendChild(head);
+      const ul = document.createElement('ul');
+      ul.className = 'cards';
+      CARDS[id].forEach((c) => ul.appendChild(cardLi(c)));
+      group.appendChild(ul);
+      panel.appendChild(group);
+    });
+
+    return panel;
+  }
+
+  const app = document.getElementById('app');
+  app.appendChild(renderPage());
+</script>
+<script>
+  /* ══ 装载被测插件 ══════════════════════════════════════════════════════════ */
+  const R = [];
+  const rec = (name, ok, detail) => R.push({ name, ok: Boolean(ok), detail: detail === undefined ? null : String(detail) });
+  const $ = (sel) => document.querySelectorAll(sel);
+  const BAR = '[data-dsh-plugin-search-bar]';
+  const HID = 'data-dsh-plugin-search-hidden';
+
+  const row = registered['dsh-plugin-search'];
+  rec('bundle row registered', row !== null && row !== undefined);
+
+  /* 假的 client ctx：effect 立刻执行并把 disposer 记下来，locale 可控。 */
+  let teardown = null;
+  const localeListeners = new Set();
+  let activeLocale = 'zh-CN';
+  const ctx = {
+    effect(cb) { teardown = cb() },
+    locale: {
+      getSnapshot: () => ({ active: activeLocale }),
+      subscribe(fn) { localeListeners.add(fn); return () => localeListeners.delete(fn) },
+    },
+  };
+  let applyError = null;
+  try {
+    const mod = row.factory(() => { throw new Error('no requires expected') });
+    mod.apply(ctx);
+  } catch (e) {
+    applyError = e;
+  }
+  rec('apply() did not throw', applyError === null, applyError && applyError.message);
+
+  const bar = document.querySelector(BAR);
+  const input = bar && bar.querySelector('input');
+  const clearBtn = bar && bar.querySelector('.dps-clear');
+  const status = bar && bar.querySelector('.dps-status');
+
+  /* 让 MutationObserver + queueMicrotask 落定。 */
+  function settle() { return new Promise((r) => setTimeout(r, 0)) }
+  function type(text) {
+    input.value = text;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  const visibleCards = () => [...$('[data-plugin-package], [data-plugin-item]')].filter((c) => !c.hasAttribute(HID));
+  const visibleGroups = () => [...$('[data-plugin-group]')].filter((g) => !g.hasAttribute(HID));
+  const visibleTitles = () => visibleCards().map((c) => c.querySelector('.cardTitle').textContent);
+
+  (async () => {
+    await settle();
+
+    // ── 1. 搜索条落位 ───────────────────────────────────────────────────────
+    rec('search bar mounted', bar !== null);
+    rec('input present', input !== null && input.type === 'search');
+    rec('bar placed inside header lead div', bar.parentNode === document.querySelector('header').firstElementChild);
+    rec('placeholder is localized (zh)', input.placeholder === '搜索插件…', input.placeholder);
+    rec('style tag injected', document.getElementById('dsh-plugin-search-style') !== null);
+    rec('nothing hidden while query is empty', $('[' + HID + ']').length === 0, $('[' + HID + ']').length);
+    rec('clear button hidden while empty', clearBtn.hidden === true);
+    rec('status empty while query is empty', status.textContent === '', status.textContent);
+
+    // ── 2. 关键词过滤 ───────────────────────────────────────────────────────
+    type('sidebar');
+    await settle();
+    rec('query "sidebar" leaves one card', visibleCards().length === 1, visibleTitles().join('|'));
+    rec('query "sidebar" matches the right card', visibleTitles()[0] === 'Better Sidebar', visibleTitles()[0]);
+    rec('"已安装" group still visible', visibleGroups().some((g) => g.getAttribute('data-plugin-group') === 'bundles'));
+    rec('"官方" group hidden when it has no hit', !visibleGroups().some((g) => g.getAttribute('data-plugin-group') === 'official'), visibleGroups().map((g) => g.getAttribute('data-plugin-group')).join('|'));
+    rec('status reports shown/total', status.textContent === '1 / 9', status.textContent);
+    rec('clear button shown once typed', clearBtn.hidden === false);
+
+    // ── 3. 描述文字也算命中范围 ─────────────────────────────────────────────
+    type('看板');
+    await settle();
+    rec('query "看板" matches by description', visibleTitles().includes('智能体团队') && visibleTitles().includes('dsh-taskboard'), visibleTitles().join('|'));
+
+    // ── 4. 大小写不敏感 + 包名命中 ──────────────────────────────────────────
+    type('AGENC');
+    await settle();
+    rec('uppercase query matches', visibleTitles().length === 1 && visibleTitles()[0].includes('agency'), visibleTitles().join('|'));
+
+    type('michengai');
+    await settle();
+    rec('query by npm scope hits the package', visibleTitles().length === 1, visibleTitles().join('|'));
+
+    // ── 5. 多关键词 = AND ──────────────────────────────────────────────────
+    type('dsh 团队');
+    await settle();
+    rec('multi-term AND narrows to one', visibleCards().length === 1, visibleTitles().join('|'));
+
+    // ── 6. 无命中：卡片全隐、组全隐、状态提示 ───────────────────────────────
+    type('zzz-no-such-plugin');
+    await settle();
+    rec('no match hides every card', visibleCards().length === 0);
+    rec('no match hides every group', visibleGroups().length === 0);
+    rec('no match shows the empty hint', status.textContent === '没有匹配的插件', status.textContent);
+
+    // ── 7. 清空恢复原状 ────────────────────────────────────────────────────
+    type('');
+    await settle();
+    rec('clearing restores all cards', visibleCards().length === 9, visibleCards().length);
+    rec('clearing restores all groups', visibleGroups().length === 2);
+    rec('clearing removes every hidden marker', $('[' + HID + ']').length === 0);
+
+    // ── 8. 清除按钮 ────────────────────────────────────────────────────────
+    type('taskboard');
+    await settle();
+    rec('typed before clear', visibleCards().length === 1);
+    clearBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await settle();
+    rec('clear button empties the input', input.value === '');
+    rec('clear button restores all cards', visibleCards().length === 9, visibleCards().length);
+
+    // ── 9. Esc 清空（且不冒泡给外壳） ──────────────────────────────────────
+    type('thoughtdag');
+    await settle();
+    let bubbled = false;
+    document.addEventListener('keydown', () => { bubbled = true });
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await settle();
+    rec('Escape clears the query', input.value === '' && visibleCards().length === 9, visibleCards().length);
+    rec('Escape does not bubble to the shell', bubbled === false);
+    document.onkeydown = null;
+
+    // ── 10. 语言切换只换文案，保留输入 ─────────────────────────────────────
+    type('sidebar');
+    await settle();
+    activeLocale = 'en-US';
+    localeListeners.forEach((fn) => fn());
+    await settle();
+    rec('locale switch relabels the placeholder', input.placeholder === 'Search plugins…', input.placeholder);
+    rec('locale switch keeps the typed query', input.value === 'sidebar');
+    rec('locale switch keeps the filter applied', visibleCards().length === 1, visibleCards().length);
+    rec('locale switch relabels the status', status.textContent === '1 / 9', status.textContent);
+    activeLocale = 'zh-CN';
+    localeListeners.forEach((fn) => fn());
+    await settle();
+
+    // ── 11. React 重挂卡片后，过滤自动重算 ────────────────────────────────
+    type('sidebar');
+    await settle();
+    const list = document.querySelector('[data-plugin-group="bundles"] ul');
+    list.remove();
+    const fresh = document.createElement('ul');
+    fresh.className = 'cards';
+    CARDS.bundles.forEach((c) => fresh.appendChild(cardLi(c)));
+    document.querySelector('[data-plugin-group="bundles"]').appendChild(fresh);
+    await settle();
+    await settle();
+    rec('filter re-applied after React remount', visibleCards().length === 1, visibleTitles().join('|'));
+    rec('search bar survived the remount', document.querySelector(BAR) === bar);
+
+    // ── 12. 切到详情页（没有 header）时搜索条撤走 ──────────────────────────
+    const panel = document.querySelector('[data-plugin-panel]');
+    const parent = panel.parentNode;
+    const saved = panel;
+    panel.remove();
+    const detail = document.createElement('section');
+    detail.setAttribute('data-plugin-panel', '');
+    const detailTop = document.createElement('div');
+    detailTop.textContent = '详情页';
+    detail.appendChild(detailTop);
+    parent.appendChild(detail);
+    await settle();
+    await settle();
+    rec('bar detached on detail view', document.querySelector(BAR) === null);
+    rec('no stale hidden markers on detail view', $('[' + HID + ']').length === 0, $('[' + HID + ']').length);
+    detail.remove();
+    parent.appendChild(saved);
+    await settle();
+    await settle();
+    rec('bar returns on list view', document.querySelector(BAR) !== null);
+
+    // ── 13. 卸载干净 ──────────────────────────────────────────────────────
+    if (typeof teardown === 'function') teardown();
+    await settle();
+    rec('teardown removes the bar', document.querySelector(BAR) === null);
+    rec('teardown removes the style tag', document.getElementById('dsh-plugin-search-style') === null);
+    rec('teardown leaves no hidden markers', $('[' + HID + ']').length === 0);
+
+    /* ── 结果写进 DOM，供 --dump-dom 取出 ──────────────────────────────── */
+    const failed = R.filter((r) => !r.ok);
+    const pre = document.createElement('pre');
+    pre.id = 'RESULT';
+    pre.textContent = JSON.stringify({ total: R.length, failed: failed.length, failures: failed }, null, 2);
+    document.body.appendChild(pre);
+  })();
+</script>
+</body>
+</html>

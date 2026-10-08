@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="344" viewBox="0 0 760 344" font-family="-apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif">
+<rect width="760" height="344" fill="#ffffff"/>
+<text x="26" y="30" font-size="20" font-weight="500" fill="#1a1a1a">插件</text>
+<text x="26" y="56" font-size="13" fill="#6b6b6b">安装、启用和配置插件</text>
+
+  <rect x="26" y="66" width="300" height="32" rx="8" fill="#ffffff" stroke="#d8d8d8" stroke-width="1"/>
+  <circle cx="44" cy="81" r="5" fill="none" stroke="#9a9a9a" stroke-width="1.4"/>
+  <path d="M47.5 84.5 L52 89" stroke="#9a9a9a" stroke-width="1.4" stroke-linecap="round"/>
+  <text x="60" y="86" font-size="14" fill="#1a1a1a">看板</text>
+  <text x="338" y="86" font-size="13" fill="#9a9a9a">2 / 9</text>
+
+<text x="26" y="126" font-size="14" font-weight="500" fill="#1a1a1a">官方</text>
+           <text x="68" y="126" font-size="13" fill="#a8a8a8">1</text>
+
+      <rect x="26" y="142" width="708" height="62" rx="10" fill="#fafafa" stroke="#ececec" stroke-width="1"/>
+      <rect x="40" y="156" width="34" height="34" rx="9" fill="#e8eef7"/>
+      <text x="88" y="170" font-size="14" fill="#1a1a1a">智能体团队</text>
+      <text x="88" y="188" font-size="12" fill="#8a8a8a">启用团队协作、团队工具、成员列表和共享任务看板。</text>
+      <rect x="688" y="162" width="32" height="18" rx="9" fill="#2b7fff"/>
+      <circle cx="714" cy="171" r="7" fill="#ffffff"/>
+    
+<text x="26" y="232" font-size="14" font-weight="500" fill="#1a1a1a">已安装</text>
+           <text x="68" y="232" font-size="13" fill="#a8a8a8">1</text>
+
+      <rect x="26" y="248" width="708" height="62" rx="10" fill="#fafafa" stroke="#ececec" stroke-width="1"/>
+      <rect x="40" y="262" width="34" height="34" rx="9" fill="#e8eef7"/>
+      <text x="88" y="276" font-size="14" fill="#1a1a1a">dsh-taskboard</text>
+      <text x="88" y="294" font-size="12" fill="#8a8a8a">DSH 任务看板：人在 Web GUI 看板上实时看到同样数据。</text>
+      <rect x="688" y="268" width="32" height="18" rx="9" fill="#2b7fff"/>
+      <circle cx="714" cy="277" r="7" fill="#ffffff"/>
+    
+</svg>

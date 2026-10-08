@@ -1,0 +1,10 @@
+# 仓库里的所有文本文件一律用 LF 存、用 LF 检出。
+# 理由：lib/client.js 是要被服务到浏览器的产物，且本机 Windows 默认的
+# core.autocrlf=true 会把每次检出都改写成 CRLF —— 那会让「本地文件」和「服务出去的
+# 文件」逐字节比较失败（tools/verify-live.mjs 正是这么比的），也会让 diff 无谓地变脏。
+* text=auto eol=lf
+
+# 二进制资源不做行尾转换
+*.png binary
+*.jpg binary
+*.ico binary

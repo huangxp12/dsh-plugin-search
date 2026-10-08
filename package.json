@@ -1,0 +1,71 @@
+{
+  "name": "dsh-plugin-search",
+  "version": "0.1.0",
+  "description": "Keyword search for the DSH Plugins page — filter installed and official plugins by name, description, or package name. · 给 DSH「插件」页加上关键词搜索。",
+  "type": "module",
+  "main": "lib/index.js",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/huangxp12/dsh-plugin-search.git"
+  },
+  "homepage": "https://github.com/huangxp12/dsh-plugin-search#readme",
+  "bugs": {
+    "url": "https://github.com/huangxp12/dsh-plugin-search/issues"
+  },
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "cordis.patch.yml",
+    "README.md",
+    "README.en.md",
+    "screenshots.json",
+    "LICENSE"
+  ],
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web"
+    }
+  },
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0",
+    "dsh": ">=0.2.0-rc.2"
+  },
+  "scripts": {
+    "test": "node test/unit.test.mjs && node test/dom.test.mjs"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": ">=4.0.0 <5"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "jsdom": "^30.1.2",
+    "@deepseek-ai/cordis": "^4.0.4"
+  },
+  "keywords": [
+    "deepseek",
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "cordis",
+    "search",
+    "plugin-manager"
+  ]
+}

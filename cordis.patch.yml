@@ -1,0 +1,12 @@
+# dsh-plugin-search bundle patch
+#
+# 这一行就是本插件的挂载声明：profile 启动时把它并进 Loader 层栈，本包因此成为
+# 一个「已启用的条目」——而客户端 bundle 只对已启用的 Loader 条目提供服务
+# （见 @deepseek-ai/dsh-client-modules 的扫描逻辑）。所以就一行 insert，不需要
+# 任何配置项。
+#
+# 已有 profile（如 ~/.dsh/profiles/desktop）如果没走 `dsh plugin add`，把下面
+# 这段原样贴进该 profile 的 cordis.patch.yml 即可（见 README 的安装一节）。
+- insert:
+    - id: plugin-search
+      name: 'dsh-plugin-search'

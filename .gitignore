@@ -1,0 +1,13 @@
+node_modules/
+.pnpm-store/
+*.tgz
+.DS_Store
+
+# 本机验证工具：它读取 ~/.dsh/.credentials.yaml 里的 browser-session 密钥，为
+# 127.0.0.1 上的 GUI 签一枚回环会话 cookie，从而确认正在运行的宿主确实提供了本插件
+# 的 bundle。密钥只在进程内存里用、不落盘、不外发，但这个文件只对「本机 19387 端口
+# 上跑着 dsh web」有意义，所以留在本地、不进仓库。
+tools/verify-live.mjs
+
+# 开发期从 app.asar 里抄出来的外壳参考件（体积大、且是别人的产物）
+tools/ref/
