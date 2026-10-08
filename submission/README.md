@@ -17,6 +17,13 @@ Status as opened:
   sweep (`.github/workflows/regate.yml`, every 6 hours) re-runs it, so the verdict flips
   without any action here.
 
+  The clock, concretely: the repository was created 2026-10-08 21:28 Beijing, so the bar is
+  met at **2026-10-09 21:28 Beijing**. `regate.yml` runs on the cron `19 */6 * * *` (08:19 /
+  14:19 / 20:19 / 02:19 Beijing), so the first pass *after* the bar is the one at
+  **2026-10-10 02:19**; the 20:19 pass on 10-09 lands eight minutes before the bar and will
+  still read 0.9 days. Expect the gate green in the early hours of 2026-10-10, i.e. by that
+  morning.
+
 - `huangxp12__dsh-plugin-search.yml` — the entry file, added to that repository at
   `data/plugins/huangxp12__dsh-plugin-search.yml`. One file is the whole submission: the
   list's READMEs are generated from `data/plugins/*.yml` and regenerated on `main` after
