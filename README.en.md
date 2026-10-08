@@ -26,8 +26,14 @@ the cards as you type:
 ## Install
 
 ```bash
-dsh plugin --profile <profile> add github:huangxp12/dsh-plugin-search
+dsh plugin --profile web add github:huangxp12/dsh-plugin-search
 ```
+
+`--profile` is required — omitting it fails with
+`required option '--profile <name>' not specified`. `web` is the standard Web profile's
+name; `dsh web` is shorthand for `dsh --profile web`. Substitute your own profile name if
+you run a differently-named one. Reload the page afterwards: a client plugin needs no
+restart.
 
 Or mount it by hand on an existing profile (e.g. `~/.dsh/profiles/desktop`):
 

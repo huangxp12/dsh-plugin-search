@@ -18,8 +18,13 @@
 ## 安装
 
 ```bash
-dsh plugin --profile <profile> add github:huangxp12/dsh-plugin-search
+dsh plugin --profile web add github:huangxp12/dsh-plugin-search
 ```
+
+`--profile` 是必需项（省略会报 `required option '--profile <name>' not specified`）；
+`web` 是标准 Web profile 的名字，`dsh web` 就是 `dsh --profile web` 的简写。
+若你用别的 profile 名（例如自己建的），把它换掉即可。
+装完**刷新页面**就生效 —— 前端插件不需要重启。
 
 也可以手动挂到已有 profile 上（例如 `~/.dsh/profiles/desktop`）：
 
