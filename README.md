@@ -17,24 +17,18 @@
 
 ## 安装
 
-### 方式一：`dsh plugin add`（推荐，本包自带 bundle patch）
-
 ```bash
-dsh plugin --profile <profile> add <本包路径或包名>
+dsh plugin --profile <profile> add github:huangxp12/dsh-plugin-search
 ```
 
-本包的 `cordis.patch.yml` 声明了 `insert` 一行，命令会把它并进 profile 的层栈，
-**不需要手改任何 profile 文件**。
+也可以手动挂到已有 profile 上（例如 `~/.dsh/profiles/desktop`）：
 
-### 方式二：手动挂载（已有 profile，例如 `~/.dsh/profiles/desktop`）
-
-1. 把本包放进 profile 的 `node_modules`（目录联接/junction 即可 —— 本机
-   `dsh-recent-sessions` 就是这么装的）：
+1. 把本包放进 profile 的 `node_modules`（目录联接/junction 即可）：
 
    ```powershell
    New-Item -ItemType Junction `
      -Path "$env:USERPROFILE\.dsh\profiles\desktop\node_modules\dsh-plugin-search" `
-     -Target "C:\Users\huang\Projects\plugin-search"
+     -Target "<本仓库路径>"
    ```
 
 2. 在 profile 的 `cordis.patch.yml` 末尾追加：
@@ -124,19 +118,19 @@ node test/unit.test.mjs
 # DOM 行为（jsdom，夹具照抄 ui-plugin-manager 真实渲染的层级与属性）：47 项
 node test/dom.test.mjs
 
-# 端到端：向正在运行的 GUI 确认启动图里有本插件、bundle 真的能取到：17 项
-node tools/verify-live.mjs 19387
-
 # 另有可直接用浏览器打开的 test/dom-harness.html（43 项，真实 Chrome 里跑过）
 ```
 
-前两套都**不启动 GUI**：`unit` 用迷你 `__ModuleLoader__` 抓下 bundle 注册的那一行，
+两套都**不启动 GUI**：`unit` 用迷你 `__ModuleLoader__` 抓下 bundle 注册的那一行，
 `dom` 用 jsdom 搭出与真实页面同构的 DOM 再断言过滤行为。夹具里的层级与 `data-*`
 属性就是被测代码赖以定位的契约 —— 夹具改了、`lib/client.js` 没跟上，测试就该红。
 
-`verify-live.mjs` 需要访问运行中的 `dsh web`：它按本机 `@wenbin_wb/dsh-bridge` 里记录的格式，
-用 `~/.dsh/.credentials.yaml` 的 `client-connection/browser-session` 密钥签一枚回环会话 cookie
-（**密钥只在进程内存里用，不落盘、不打印**）。
+还有第四套端到端检查（`tools/verify-live.mjs`，17 项）：向正在运行的 `dsh web` 确认
+宿主的启动图里有本包、bundle 取回来与仓库里的文件逐字节一致、`/` 与 `/api` 的鉴权没被
+改动。它**刻意不随仓库发布**：为了访问本机 GUI，它要用 `~/.dsh/.credentials.yaml` 里的
+`client-connection/browser-session` 密钥签一枚回环会话 cookie，而插件仓库不是存放
+「会读取凭据的文件」的地方 —— 无论它多无害，那正是评审该多看一眼的形状。需要时按上面的
+说明在本机重建即可；上面三套不需要任何凭据，且覆盖插件自身的行为。
 
 ### 文件
 
@@ -146,6 +140,7 @@ node tools/verify-live.mjs 19387
 - `test/` — 两套测试 + 一个可直接用浏览器打开的 `dom-harness.html`。
 - `docs/preview.svg` — 预览图，由 `tools/render-preview.mjs` 跑真实 `lib/client.js` 生成
   （不是手绘示意图）：输入「看板」后两个分组各留一张命中卡片，搜索条上显示 `2 / 9`。
+- `tools/render-preview.mjs` — 重新生成 `docs/preview.svg` 与 `assets/screenshot-1.png`：
+  两者都由真实 bundle 驱动着跑一遍，所以截图不会和代码走散。
 - `tools/asar-extract.mjs` — 从 `app.asar` 里读外壳源码的只读工具（本次开发用来核对
   `ui-plugin-manager` 的 DOM 契约），与插件运行无关。
-- `tools/ref/` — 开发期留下的外壳参考件（该页的 README 与打包产物），只读，供日后核对契约。

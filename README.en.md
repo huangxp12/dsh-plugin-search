@@ -139,22 +139,23 @@ node test/unit.test.mjs
 # DOM behaviour (jsdom; the fixture copies ui-plugin-manager's real structure): 47 checks
 node test/dom.test.mjs
 
-# End to end against a running GUI: boot graph, bundle served, auth untouched: 17 checks
-node tools/verify-live.mjs 19387
-
 # A browser harness you can also just open: test/dom-harness.html (43 checks, run in Chrome)
 ```
 
-Neither of the first two starts a GUI: `unit` installs a minimal `__ModuleLoader__` to
-capture the row the bundle registers, and `dom` builds a DOM isomorphic to the real page
-in jsdom and asserts the filtering behaviour. The fixture's structure and `data-*`
-attributes are the contract the code under test navigates by — if the fixture changes and
-`lib/client.js` does not follow, the tests are supposed to go red.
+Neither suite starts a GUI: `unit` installs a minimal `__ModuleLoader__` to capture the row
+the bundle registers, and `dom` builds a DOM isomorphic to the real page in jsdom and
+asserts the filtering behaviour. The fixture's structure and `data-*` attributes are the
+contract the code under test navigates by — if the fixture changes and `lib/client.js`
+does not follow, the tests are supposed to go red.
 
-`verify-live.mjs` talks to a running `dsh web`: following the recipe recorded in this
-machine's `@wenbin_wb/dsh-bridge`, it signs a loopback session cookie with the
-`client-connection/browser-session` secret from `~/.dsh/.credentials.yaml` (**the secret is
-used in process memory only — never written to disk, never printed**).
+A fourth, end-to-end suite (`tools/verify-live.mjs`, 17 checks) confirms against a running
+`dsh web` that the host reports this package in its boot graph, serves its bundle
+byte-identically, and leaves `/` and `/api` auth unchanged. It is **not shipped in this
+repository** on purpose: to reach the local GUI it signs a loopback session cookie with the
+`client-connection/browser-session` secret from `~/.dsh/.credentials.yaml`, and a plugin
+repository is the wrong place to keep a file that reads credentials — however benign, it is
+exactly the shape a reviewer is right to look twice at. Recreate it locally if you want the
+check; the three suites above need no credentials and cover the plugin's own behaviour.
 
 ### Files
 
@@ -170,3 +171,5 @@ used in process memory only — never written to disk, never printed**).
 - `tools/asar-extract.mjs` — a read-only tool for reading shell sources out of `app.asar`
   (used during development to verify ui-plugin-manager's DOM contract); unrelated to
   running the plugin.
+- `tools/render-preview.mjs` — regenerates `docs/preview.svg` and `assets/screenshot-1.png`
+  by driving the real bundle in jsdom, so the screenshots cannot drift from the code.
