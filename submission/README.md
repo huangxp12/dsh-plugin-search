@@ -1,10 +1,55 @@
 # Market submission
 
-These two files are the record of this plugin's submission to the DSH plugin catalog,
-[`awesome-dsh-plugin`](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin). They are
-**not** part of the plugin, and nothing at runtime reads them.
+These files are the record of this plugin's submission to the DSH plugin catalog,
+[`awesome-dsh-plugin`](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin), and of the
+feature request that asks the maintainers to build the search natively. They are **not**
+part of the plugin, and nothing at runtime reads them.
+
+## Feature request to DeepSeek Harness
+
+**Discussion:** https://github.com/deepseek-ai/deepseek-harness/discussions/9187
+(`Ideas`, posted 2026-10-08)
+
+The right home for this feature is `ui-plugin-manager` itself, not a third-party DOM
+injection. The route there turned out **not** to be an issue or a pull request:
+
+| Route | Status | Evidence |
+| --- | --- | --- |
+| Pull request | ❌ not accepted | `CONTRIBUTING.md`: *"we cannot accept external pull requests at the moment"* |
+| Issue | ❌ disabled | `hasIssuesEnabled: false` — there is no New issue button |
+| Discussion | ✅ the documented route | `CONTRIBUTING.md`: *"Identify and report issues or bugs in GitHub Discussions"* |
+
+Sent to the `Ideas` category, which is what that category is for.
+
+Two findings shaped the post, both verified against the shipped artifacts by
+[`../tools/verify-discussion-claims.mjs`](../tools/verify-discussion-claims.mjs)
+(34/34 assertions):
+
+1. **The maintainers already ship a search implementation** — in Settings → Plugins →
+   Plugin list (`ui-settings-plugin-inventory`). Its `matches()` covers `moduleName`,
+   `entryId`, `title` and `description`, and it has an `emptySearch` state with localized
+   copy. So the ask is not "add search" but *"apply that pattern at the Plugins page's
+   list level"* — a much smaller change against an existing precedent.
+2. **This page is not entirely without search**, and the post says so rather than
+   overstating. `ui-plugin-manager` does have a `type: "search"` input — but it lives
+   inside a **bundle's detail page**, filters **that bundle's own rows**, only renders past
+   `ROW_FILTER_THRESHOLD = 10`, and its copy is 组件 (component), not plugin. The gap is
+   specifically the **list level**; claiming "no search at all" would have been false and
+   would have cost the request its credibility.
+
+Checked for duplicates before posting: #1017 and #4810 both concern the **settings** list
+(hence "composes with search" — that page already has one), and #1857 is about
+descriptions in that same list. No existing discussion asks for this page's list search.
+
+`discussion-plugin-list-search.md` is the posted body, kept here so the claims stay
+diffable against the code they describe.
+
+---
+
+## Catalog submission
 
 **Pull request:** https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/6882
+
 
 Status as opened:
 
