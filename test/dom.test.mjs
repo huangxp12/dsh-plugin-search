@@ -51,7 +51,18 @@ const CARDS = {
 }
 const TOTAL = CARDS.official.length + CARDS.bundles.length
 
-function buildPage(doc) {
+/**
+ * 一张「插件」页（列表态）。
+ *
+ * 默认按 DSH NEXT 2.0.x 的真实层级搭：`section[data-plugin-panel]` →
+ * `div[data-plugin-body]` → `div[data-plugin-bar]` → `header`（内含
+ * `div.pageHeading` 与 `[data-plugin-toolbar]`）。这一段是 0.2.2-rc.1 上
+ * ui-plugin-manager 的 JSX 原样。
+ *
+ * `legacy: true` 搭旧外壳（页头直接挂在 panel 下、没有 body/bar/toolbar 属性），
+ * 用来验证「没有测量式页头时仍然落回页头左侧那块」的向后兼容。
+ */
+function buildPage(doc, { toolbarHidden = false, legacy = false } = {}) {
   const panel = doc.createElement('section')
   panel.className = 'page'
   panel.setAttribute('data-plugin-panel', '')
@@ -59,9 +70,13 @@ function buildPage(doc) {
   const header = doc.createElement('header')
   header.className = 'pageHead'
   header.setAttribute('data-window-drag', '')
+  if (!legacy) header.setAttribute('data-plugin-page-header', 'list')
+
   const lead = doc.createElement('div')
+  lead.className = 'pageHeading'
   const h1 = doc.createElement('h1')
   h1.className = 'pageTitle'
+  h1.setAttribute('data-plugin-header-part', 'title')
   h1.textContent = '插件'
   const intro = doc.createElement('div')
   intro.className = 'pageIntro'
@@ -70,8 +85,11 @@ function buildPage(doc) {
   intro.appendChild(introSpan)
   lead.appendChild(h1)
   lead.appendChild(intro)
+
   const toolbar = doc.createElement('div')
   toolbar.className = 'toolbar'
+  if (!legacy) toolbar.setAttribute('data-plugin-toolbar', '')
+  if (toolbarHidden) toolbar.setAttribute('hidden', '')
   const refresh = doc.createElement('button')
   refresh.type = 'button'
   refresh.className = 'iconButton'
@@ -82,9 +100,23 @@ function buildPage(doc) {
   add.textContent = '添加插件'
   toolbar.appendChild(refresh)
   toolbar.appendChild(add)
+
   header.appendChild(lead)
   header.appendChild(toolbar)
-  panel.appendChild(header)
+
+  let mount = panel
+  if (!legacy) {
+    const body = doc.createElement('div')
+    body.setAttribute('data-plugin-body', '')
+    const bar = doc.createElement('div')
+    bar.setAttribute('data-plugin-bar', '')
+    bar.appendChild(header)
+    body.appendChild(bar)
+    panel.appendChild(body)
+    mount = body
+  } else {
+    panel.appendChild(header)
+  }
 
   for (const id of ['official', 'bundles']) {
     const group = doc.createElement('section')
@@ -104,7 +136,7 @@ function buildPage(doc) {
     head.appendChild(count)
     group.appendChild(head)
     group.appendChild(buildList(doc, id))
-    panel.appendChild(group)
+    mount.appendChild(group)
   }
   return panel
 }
@@ -202,7 +234,11 @@ rec('apply() did not throw', applyError === null, applyError && applyError.stack
 // ── 辅助 ────────────────────────────────────────────────────────────────────
 const BAR = '[data-dsh-plugin-search-bar]'
 const HID = 'data-dsh-plugin-search-hidden'
-const settle = () => new Promise((resolve) => setTimeout(resolve, 0))
+// 重算是限速采样的（lib/client.js 的 SYNC_INTERVAL_MS = 60ms），每轮至少跨两拍。
+const settle = async () => {
+  await new Promise((resolve) => setTimeout(resolve, 90))
+  await new Promise((resolve) => setTimeout(resolve, 90))
+}
 const q = (sel) => document.querySelector(sel)
 const qa = (sel) => [...document.querySelectorAll(sel)]
 const visibleCards = () => qa('[data-plugin-package], [data-plugin-item]').filter((c) => !c.hasAttribute(HID))
@@ -224,7 +260,11 @@ function type(text) {
 await settle()
 rec('search bar mounted', bar !== null)
 rec('input is type=search', input !== null && input.type === 'search')
-rec('bar sits in the header lead block', bar && bar.parentNode === q('header').firstElementChild)
+rec('bar sits in the page toolbar',
+  bar && bar.parentNode === q('[data-plugin-toolbar]'),
+  bar && bar.parentNode && bar.parentNode.className)
+rec('bar is the toolbar first child', bar && bar.parentNode.firstElementChild === bar)
+rec('bar is NOT inside the measured pageHeading', bar && bar.closest('.pageHeading') === null)
 rec('placeholder localized to zh', input && input.placeholder === '搜索插件…', input && input.placeholder)
 rec('style tag injected', document.getElementById('dsh-plugin-search-style') !== null)
 rec('nothing hidden while query is empty', hiddenCount() === 0, hiddenCount())
@@ -348,7 +388,51 @@ await settle()
 await settle()
 rec('bar returns on the list view', q(BAR) !== null)
 
-// ══ 13. 卸载清理 ════════════════════════════════════════════════════════════
+// ══ 13. 2.0.x 的另两条落点：工具条 hidden 与旧外壳 ══════════════════════════
+type('')
+await settle()
+const app2 = document.getElementById('app')
+const listPanelForShape = q('[data-plugin-panel]')
+listPanelForShape.remove()
+
+// ① 工具条 hidden（非「已安装」页签）：退到页头下方一行
+const hiddenToolbarPanel = buildPage(document, { toolbarHidden: true })
+app2.appendChild(hiddenToolbarPanel)
+await settle()
+rec('hidden toolbar falls back to a row under the header',
+  bar.parentNode === hiddenToolbarPanel.querySelector('[data-plugin-body]')
+    && bar.previousElementSibling === hiddenToolbarPanel.querySelector('[data-plugin-bar]'),
+  bar.parentNode && (bar.parentNode.getAttribute('data-plugin-body') !== null ? '[data-plugin-body]' : bar.parentNode.className))
+hiddenToolbarPanel.remove()
+
+// ② 旧外壳（没有 body/bar/toolbar 属性）：仍然落回页头左侧那块
+const legacyPanel = buildPage(document, { legacy: true })
+app2.appendChild(legacyPanel)
+await settle()
+rec('legacy shells keep the heading placement',
+  bar.parentNode === legacyPanel.querySelector('header').firstElementChild,
+  bar.parentNode && bar.parentNode.className)
+legacyPanel.remove()
+app2.appendChild(listPanelForShape)
+await settle()
+rec('bar returns into the toolbar with the 2.0.x page', bar.parentNode === q('[data-plugin-toolbar]'))
+
+// ══ 14. 回归：落点锚点不能是搜索条自己（否则自激循环） ═════════════════════
+// 把 insertBefore 包一层计数：落点稳定后不该再搬动搜索条。
+const originalInsertBefore = window.Node.prototype.insertBefore
+let barMoves = 0
+window.Node.prototype.insertBefore = function (node, ref) {
+  if (node instanceof window.Element && node.hasAttribute('data-dsh-plugin-search-bar')) barMoves++
+  return originalInsertBefore.call(this, node, ref)
+}
+for (let i = 0; i < 3; i++) {
+  q('[data-plugin-group="bundles"] .groupTitle').textContent = `bundles ${i}`
+  await settle()
+}
+window.Node.prototype.insertBefore = originalInsertBefore
+rec('a settled bar is not re-inserted on every sync (no self-feeding loop)', barMoves === 0, barMoves)
+
+// ══ 15. 卸载清理 ════════════════════════════════════════════════════════════
 if (typeof teardown === 'function') teardown()
 await settle()
 rec('teardown removes the bar', q(BAR) === null)
